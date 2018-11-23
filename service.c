@@ -39,6 +39,7 @@ int updateList(char* filename, int values[N], double avg){
 	for(int i=0;i<10;i++){
 		fprintf(fptr,"%d\n",values[i]);
 	}
+	fprintf(fptr,"%lf\n",avg);
 	fclose(fptr);
 	return 0;
 }
@@ -73,10 +74,12 @@ int main(){
 		for(int i=(N-1);i>=0;i--){
 			fscanf(fp, "%d\n", &values[(N-1)-i]);
 		}
+		fscanf(fp, "%lf\n", &avg);
 		printf("Old values:\n");
 		for(int i=0;i<N;i++){
 			printf("\t%d:\t%d\n",i,values[i]);
 		}
+		printf("\tAverage:\t%lf\n",avg);
 		fclose(fp);
 		printf("Old memory values recovered\n");
 	}else{
@@ -106,6 +109,7 @@ int main(){
 	for(int i=0;i<N;i++){
 		printf("\t%d:\t%d\n",i,values[i]);
 	}
+	printf("\tAverage:\t%lf\n",avg);
 
 	/*checkpoint*/
 	updateList(filename, values, avg);
@@ -113,4 +117,3 @@ int main(){
 	/*Send OK to watchdog*/
 	
 }
-
