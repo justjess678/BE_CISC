@@ -46,10 +46,14 @@ int updateList(char* filename, int values[N], double avg){
 
 double operation(int values[N]){
 	double sum = 0, average = 0;
+	int cnt = 0;
 	for(int i = 0; i < N-1; i++){
-        sum += values[i];
+		if(values[i]>-1){
+        	sum += values[i];
+			cnt++;
+		}
     }
-    average = sum / (N-1);
+    average = sum / cnt;
 	return average;
 }
 
@@ -57,9 +61,9 @@ int main(){
 	//initialisation
 	int values[N-1];
 	for(int i=0;i<N;i++){
-		values[i]=0;
+		values[i]=-1;
 	}
-	double avg=0;
+	double avg=-1;
 
 	//memory file handling
 	FILE *fp;
@@ -101,11 +105,26 @@ int main(){
 
 	/*receive avg here*/
 	printf("Receiving started\n");
+	/*int numValsRecieved = 0;
+	while(!STOP){
+		val = getVal();
+		values[numValsRecieved%N] = val;
+		numValsRecieved++;
+		//calculate average of values
+		avg = operation(values);
+		printf("\tAverage:\t%lf\n",avg);
+		if(numValsRecieved%N == 0){
+			//checkpoint
+			updateList(filename, values, avg);
+			//send OK to watchdog
+		}
+	}
+	*/
 
 	/*calculate average of values*/
 	avg = operation(values);
 	
-	printf("New values:\n");
+	printf("Values:\n");
 	for(int i=0;i<N;i++){
 		printf("\t%d:\t%d\n",i,values[i]);
 	}
