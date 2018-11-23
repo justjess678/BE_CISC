@@ -26,20 +26,8 @@ void * threadCapteur(void * arg)
 }
 
 
-
-int main()
+void * threadServicePrimaire (void * watchdog)
 {
-	srand(time(NULL));
-
-/****************************Declaratiion Partie Capteur************************************/
-	pthread_t capteur;
-	pthread_attr_t *mesAttribut1 = NULL;
-/******************************************************************************/
-	
-
-/****************************Code Capteur************************************/	
-	pthread_create(&capteur,mesAttribut1, threadCapteur, NULL);
-
 	while(1)
 	{
 		pthread_mutex_lock(&mutexLectureCapteur);
@@ -52,6 +40,29 @@ int main()
 		pthread_mutex_unlock(&mutexLectureCapteur);
 	
 	}
+}
+
+
+int main()
+{
+	srand(time(NULL));
+
+/****************************Declaration Partie Capteur************************************/
+	pthread_t capteur;
+	pthread_attr_t *mesAttributNULL = NULL;
+/****************************Declaration Service Primaire**********************************/
+	pthread_t sevicePrim;
+	
+
+/****************************Code Capteur************************************/	
+	pthread_create(&capteur,mesAttributNULL, threadCapteur, NULL);
+/****************************Code Service Primaire*****************************/	
+	pthread_create(&sevicePrim,mesAttributNULL, threadServicePrimaire, NULL);
+	
+	while(1)
+	{
+	}
+	
 /******************************************************************************************/
 	
 	return 0;
