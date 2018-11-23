@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 
 pthread_mutex_t mutexLectureCapteur = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexWatchDog = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 #define N 10
 
@@ -11,6 +13,8 @@ int valCapteur = 0;
 int avail=0;
 
 char * filename = "memory.txt";
+
+int watchdog;
 
 
 /**************************fonctions******************************/
@@ -67,36 +71,56 @@ void * threadCapteur(void * arg)
 }
 
 
-void * threadServicePrimaire (void * watchdog)
-{
-	int cpt = 0;
-	int tabValCapteur[N];
-	double mean = 0;
+
+void * threadService (void * arg){
+
+int bug;
+int * mode = (int *) arg;
+
+int cpt = 0;
+int tabValCapteur[N];
+double mean = 0;
+
+	while(*mode ==1){
+
+	}
+
+
+
 	while(1)
-	{
+	{	 
 		//Lecture "securisee" de la valeur capteur
 		pthread_mutex_lock(&mutexLectureCapteur);
+		bug = rand()%8;
+		if(bug == 1){
+			printf("thread %lu bug \n",pthread_self());
+			fflush(stdout);
+			while(1){}
+
+		} 
+
+		pthread_mutex_lock(&mutexWatchDog);
+		watchdog++;
+		pthread_mutex_unlock(&mutexWatchDog);
+
 		while(avail==0)
 		{
-		pthread_cond_wait(&cond, &mutexLectureCapteur);
+			pthread_cond_wait(&cond, &mutexLectureCapteur);
 		}		
-		printf("Valeur lue: %d\n", valCapteur);
 		avail=0;
 		pthread_mutex_unlock(&mutexLectureCapteur);
-		
-		
+	
+	
 		tabValCapteur[cpt] = valCapteur;
 		cpt++;
-		
+	
 		if(cpt>=N) // on a les 10 valeurs
 		{
 			mean =  avgCalc(tabValCapteur);
-			printf("\nValeur lue: %lf\n", mean);
+			printf("Moyenne: %lf\n\n", mean);
 			updateList(filename, tabValCapteur, mean);
 			cpt = 0;
-		}
-		
-	
+		}	
 	}
 }
 
@@ -112,16 +136,60 @@ int main()
 	pthread_t capteur;
 	pthread_attr_t *mesAttributNULL = NULL;
 /****************************Declaration Service Primaire**********************************/
-	pthread_t sevicePrim;
+	pthread_t th1,th2;
 	
 
 /****************************Code Capteur************************************/	
 	pthread_create(&capteur,mesAttributNULL, threadCapteur, NULL);
 /****************************Code Service Primaire*****************************/	
-	pthread_create(&sevicePrim,mesAttributNULL, threadServicePrimaire, NULL);
+
+	int modeThread1=2;
+	int modeThread2=1;
+
+	pthread_create(&th1,mesAttributNULL, threadService, &modeThread1);
+	pthread_create(&th2,mesAttributNULL, threadService, &modeThread2);
+
+	int oldWatchdog=watchdog;
+	int threadActiv=1;
 	
 	while(1)
-	{
+	{	
+		sleep(2); 
+
+		pthread_mutex_lock(&mutexWatchDog);
+		printf("wd %d %d\n", oldWatchdog ,watchdog);
+
+		if(oldWatchdog !=watchdog){
+			oldWatchdog=watchdog;
+			pthread_mutex_unlock(&mutexWatchDog);
+		}
+		else{
+			watchdog=0;
+			oldWatchdog=watchdog;
+			pthread_mutex_unlock(&mutexWatchDog);
+
+			if(threadActiv==1){
+				modeThread2=2;
+				pthread_mutex_unlock(&mutexLectureCapteur);
+				threadActiv=2;
+
+				pthread_cancel(th1);
+				modeThread1=1;
+				//sleep(0.2); 
+				pthread_create(&th1,mesAttributNULL, threadService, &modeThread1);
+			}
+			else{
+				modeThread1=2;
+				pthread_mutex_unlock(&mutexLectureCapteur);
+				threadActiv=1;
+
+				pthread_cancel(th2);
+				modeThread2=1;
+				//sleep(0.2); 
+				pthread_create(&th2,mesAttributNULL, threadService, &modeThread2);
+			}
+
+		}
 	}
 	
 /******************************************************************************************/
