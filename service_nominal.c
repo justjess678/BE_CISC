@@ -3,13 +3,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+pthread_mutex_t mutexLectureCapteur = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+
+int avail=0;
+
 void * threadCapteur(void * valCapteur)
 {
-	int * a = (int *)valCapteur; //valeur intermédiaire pour pointer sur l'entier
+	int * a = (int *)valCapteur; 
 	while(1)
 	{
-		*a = rand()%20; //Valeur de 0 a 20
-		sleep(1);      // Attends une seconde
+		pthread_mutex_lock(&mutexLectureCapteur);
+		*a = rand()%20; 
+		avail=1;
+		pthread_mutex_unlock(&mutexLectureCapteur);
+		pthread_cond_signal(&cond);
+		sleep(1);     
+		
 	}
 }
 
@@ -31,12 +42,17 @@ int main()
 
 	while(1)
 	{
-		
+		pthread_mutex_lock(&mutexLectureCapteur);
+		while(avail==0)
+		{
+		pthread_cond_wait(&cond, &mutexLectureCapteur);
+		}		
 		printf("\nValeur lue: %d\n", *valCapteur);
-		sleep(1);
+		avail=0;
+		pthread_mutex_unlock(&mutexLectureCapteur);
+	
 	}
 /******************************************************************************************/
 	
 	return 0;
 }
-
