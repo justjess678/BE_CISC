@@ -94,7 +94,7 @@ double mean3,mean2,mean1 = 0;
 		printf("thread %lu assure tâche principale \n",pthread_self());
 		//Lecture "securisee" de la valeur capteur
 		pthread_mutex_lock(&mutexLectureCapteur);
-		bug = rand()%12;
+		bug = rand()%120;
 		if(bug == 1){
 			printf("thread %lu faute en crash \n",pthread_self());
 			fflush(stdout);
@@ -189,7 +189,7 @@ int main()
 	
 	while(1)
 	{	
-		sleep(1.6); 
+		sleep(1.4); 
 
 		pthread_mutex_lock(&mutexWatchDog);
 		printf("wd %d %d\n", oldWatchdog ,watchdog);
